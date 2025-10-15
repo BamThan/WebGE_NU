@@ -74,7 +74,6 @@ function pickSimilarity(obj) {
     }
     return null
 }
-
 // ฟังก์ชันช่วยแปลงเลขเป็น %
 function pct(v) {
     if (v == null) return '-'
