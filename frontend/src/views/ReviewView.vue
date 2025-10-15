@@ -1,8 +1,11 @@
 <script setup>
 import Layout from '@/layout/Layout.vue';
-
 import { ref, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
+// Base API URL (ตั้งใน .env: VITE_API_URL)
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const router = useRouter()
 
 // ข้อมูลที่โหลดจาก backend
 const faculties = ref([])
@@ -19,7 +22,8 @@ const present = ref([])
 const experience = ref([])
 const challenge = ref([])
 const time = ref([])
-// ตัวแปรที่ผูกกับ v-model
+
+// ตัวแปร v-model
 const studentId = ref('')
 const selectedStudentLevel = ref('null')
 const selectedFaculty = ref('null')
@@ -38,16 +42,31 @@ const selectedchallenge = ref('')
 const selectedtime = ref('')
 
 const reviewText = ref('')
+const selectedGroupType = ref('')
 
+// UI state
+const loading = ref(false)
+const submitLoading = ref(false)
+const errorMsg = ref('')
+const successMsg = ref('')
+
+// ป้องกัน input รับเฉพาะตัวเลข (ถ้าใช้)
 function isNumberOnly(event) {
     if (!/[0-9]/.test(event.key)) {
         event.preventDefault()
     }
 }
 
-const selectedGroupType = ref('')
+// helper headers (ใส่ Authorization ถ้ามี token)
+function authHeaders(contentType = 'application/json') {
+  const headers = {}
+  if (contentType) headers['Content-Type'] = contentType
+  const token = localStorage.getItem('token')
+  if (token) headers.Authorization = `Bearer ${token}`
+  return headers
+}
 
-
+// เมื่อเลือกกลุ่ม ให้โหลดรายวิชาของกลุ่มนั้น (endpoint: /subjects/:groupId)
 watch(selectedGroupType, async (newGroupId) => {
     if (!newGroupId) {
         subjects.value = []
@@ -55,136 +74,136 @@ watch(selectedGroupType, async (newGroupId) => {
     }
 
     try {
-        const res = await fetch(`http://localhost:3000/subjects/${newGroupId}`)
-        subjects.value = await res.json()
+        const res = await fetch(`${API_URL}/subjects/${encodeURIComponent(newGroupId)}`, {
+          method: 'GET',
+          headers: authHeaders()
+        })
+        const j = await res.json().catch(() => null)
+        if (!res.ok) throw new Error(j?.message || res.statusText || 'โหลดรายวิชาล้มเหลว')
+        subjects.value = Array.isArray(j) ? j : (j?.items ?? [])
     } catch (err) {
         console.error("โหลดรายวิชาไม่สำเร็จ:", err)
         subjects.value = []
     }
 })
 
-
-
-
-// โหลดข้อมูลจาก backend
+// โหลดข้อมูล static ตอน mount (ไม่โหลด subjects จนกว่าจะเลือก group)
 onMounted(async () => {
     try {
-        const [fRes, iRes, gRes, grRes, sgRes, gwRes, swRes, exRes, attRes, inRes, preRes,
-            expRes, cRes, tRes] = await Promise.all([
-                fetch("http://localhost:3000/faculty"),
-                fetch("http://localhost:3000/interestd"),
-                fetch("http://localhost:3000/subject-groups"),
-                fetch("http://localhost:3000/grades"),
-                fetch("http://localhost:3000/subjects/:groupId"),
-                fetch("http://localhost:3000/groupwork"),
-                fetch("http://localhost:3000/solowork"),
-                fetch("http://localhost:3000/exam"),
-                fetch("http://localhost:3000/attendance"),
-                fetch("http://localhost:3000/instruction"),
-                fetch("http://localhost:3000/present"),
-                fetch("http://localhost:3000/experience"),
-                fetch("http://localhost:3000/challenge"),
-                fetch("http://localhost:3000/time")
-            ])
+        loading.value = true
+        errorMsg.value = ''
 
+        // ขอข้อมูลหลาย endpoint พร้อมกัน
+        const endpoints = [
+          'faculty','interestd','subject-groups','grades',
+          'groupwork','solowork','exam','attendance',
+          'instruction','present','experience','challenge','time'
+        ]
 
-        faculties.value = await fRes.json()
-        interestds.value = await iRes.json()
-        subjectGroups.value = await gRes.json()
-        grades.value = await grRes.json()
-        subjects.value = await sgRes.json()
-        groupwork.value = await gwRes.json()
-        soloWork.value = await swRes.json()
-        exam.value = await exRes.json()
-        attendance.value = await attRes.json()
-        instruction.value = await inRes.json()
-        present.value = await preRes.json()
-        experience.value = await expRes.json()
-        challenge.value = await cRes.json()
-        time.value = await tRes.json()
+        const fetches = endpoints.map(p => fetch(`${API_URL}/${p}`, { headers: authHeaders() }))
+        const responses = await Promise.all(fetches)
 
-        const email = localStorage.getItem('userEmail')
-        if (!email) {
-            return router.push({ name: 'login', query: { redirect: '/review' } })
+        // parse results safely
+        const parseSafe = async (r) => {
+          const j = await r.json().catch(() => null)
+          if (!r.ok) throw new Error(j?.message || r.statusText || 'Request failed')
+          return j ?? []
         }
 
+        faculties.value = await parseSafe(responses[0])
+        interestds.value = await parseSafe(responses[1])
+        subjectGroups.value = await parseSafe(responses[2])
+        grades.value = await parseSafe(responses[3])
+        groupwork.value = await parseSafe(responses[4])
+        soloWork.value = await parseSafe(responses[5])
+        exam.value = await parseSafe(responses[6])
+        attendance.value = await parseSafe(responses[7])
+        instruction.value = await parseSafe(responses[8])
+        present.value = await parseSafe(responses[9])
+        experience.value = await parseSafe(responses[10])
+        challenge.value = await parseSafe(responses[11])
+        time.value = await parseSafe(responses[12])
+
+        // ค่า default จาก localStorage (ถ้ามี)
         studentId.value = localStorage.getItem('student_ID') || ''
         selectedStudentLevel.value = localStorage.getItem('studentLevel') || ''
         selectedFaculty.value = localStorage.getItem('facultyId') || ''
-
     } catch (err) {
         console.error("โหลดข้อมูลไม่สำเร็จ:", err)
+        errorMsg.value = err?.message || 'โหลดข้อมูลเริ่มต้นล้มเหลว'
+    } finally {
+        loading.value = false
     }
 })
 
-
-// ====== ส่งฟอร์มเข้า /submit-form ======
-async function onSubmit(e) {
-    e.preventDefault()
-
-    // ตรวจง่าย ๆ
+// Submit form (ใช้ @submit.prevent)
+async function onSubmit() {
+    // ตรวจ validate เบื้องต้น
     if (!studentId.value) return alert('กรุณากรอกรหัสนิสิต')
-    if (!selectedStudentLevel.value) return alert('กรุณาเลือกชั้นปี')
-    if (!selectedFaculty.value) return alert('กรุณาเลือกคณะ')
+    if (!selectedStudentLevel.value || selectedStudentLevel.value === 'null') return alert('กรุณาเลือกชั้นปี')
+    if (!selectedFaculty.value || selectedFaculty.value === 'null') return alert('กรุณาเลือกคณะ')
     if (!selectedGroupType.value) return alert('กรุณาเลือกหมวดวิชา')
     if (!selectedSubject.value) return alert('กรุณาเลือกรายวิชา')
     if (!selectedGroupwork.value) return alert('กรุณาตอบคำถามข้อที่ 1')
     if (!selectedsolowork.value) return alert('กรุณาตอบคำถามข้อที่ 2')
     if (!selectedexam.value) return alert('กรุณาตอบคำถามข้อที่ 3')
     if (!selectedattendance.value) return alert('กรุณาตอบคำถามข้อที่ 4')
-    if (selectedinstruction.value.length === 0) return alert('กรุณาตอบคำถามข้อที่ 5')
+    if (!Array.isArray(selectedinstruction.value) || selectedinstruction.value.length === 0) return alert('กรุณาตอบคำถามข้อที่ 5')
     if (!selectedpresent.value) return alert('กรุณาตอบคำถามข้อที่ 6')
     if (!selectedexperience.value) return alert('กรุณาตอบคำถามข้อที่ 7')
     if (!selectedchallenge.value) return alert('กรุณาตอบคำถามข้อที่ 8')
     if (!selectedtime.value) return alert('กรุณาตอบคำถามข้อที่ 9')
 
-    // เตรียม payload ให้ตรงกับ backend
     const payload = {
         student_id: studentId.value,
         subjectGroup: selectedGroupType.value,
         student_level: selectedStudentLevel.value,
         faculty: selectedFaculty.value,
-        interestd: selectedInterestd.value,   // backend รวมเป็น comma ให้เอง
+        interestd: Array.isArray(selectedInterestd.value) ? selectedInterestd.value.join(',') : selectedInterestd.value,
         subject: selectedSubject.value,
-
         groupwork: selectedGroupwork.value,
         solowork: selectedsolowork.value,
         exam: selectedexam.value,
         attendance: selectedattendance.value,
-        instruction: selectedinstruction.value.join(','),
+        instruction: Array.isArray(selectedinstruction.value) ? selectedinstruction.value.join(',') : selectedinstruction.value,
         present: selectedpresent.value,
         experience: selectedexperience.value,
         challenge: selectedchallenge.value,
         time: selectedtime.value,
-
         grade: selectedGrade.value,
         review: reviewText.value
-        
     }
 
     try {
-        const res = await fetch('http://localhost:3000/submit-form', {
+        submitLoading.value = true
+        errorMsg.value = ''
+        successMsg.value = ''
+
+        const res = await fetch(`${API_URL}/submit-form`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders(),
             body: JSON.stringify(payload)
         })
 
-        const text = await res.text()
+        const j = await res.json().catch(() => null)
         if (!res.ok) {
-            console.error('submit-form failed:', text)
-            return alert('บันทึกไม่สำเร็จ: ' + text)
+            console.error('submit-form failed:', j || await res.text())
+            throw new Error(j?.message || res.statusText || 'บันทึกไม่สำเร็จ')
         }
 
-        alert('บันทึกสำเร็จ 🎉')
-        // จะ reset ฟอร์มไหม? ถ้าต้องการ uncomment ข้างล่าง
+        successMsg.value = j?.message || 'บันทึกสำเร็จ 🎉'
+        alert(successMsg.value)
+        // ถ้าต้องการ reset form ให้เรียก resetForm()
         // resetForm()
     } catch (err) {
         console.error('submit error:', err)
-        alert('เกิดข้อผิดพลาดระหว่างบันทึก')
+        errorMsg.value = err?.message || 'เกิดข้อผิดพลาดระหว่างบันทึก'
+        alert(errorMsg.value)
+    } finally {
+        submitLoading.value = false
     }
 }
 
-//(ถ้าต้องการ reset)
 function resetForm() {
     studentId.value = ''
     selectedStudentLevel.value = ''
@@ -204,13 +223,14 @@ function resetForm() {
     selectedGrade.value = ''
     reviewText.value = ''
 }
-
-
 </script>
 
 <template>
     <Layout>
-        <form class="p-6 space-y-6" @submit="onSubmit">
+        <form class="p-6 space-y-6" @submit.prevent="onSubmit">
+
+            <div v-if="loading" class="p-4 text-gray-600">กำลังโหลดข้อมูล...</div>
+            <div v-if="errorMsg" class="alert alert-error">{{ errorMsg }}</div>
 
             <div class="flex gap-10">
                 <fieldset class="fieldset">
@@ -242,11 +262,10 @@ function resetForm() {
                 </fieldset>
             </div>
 
-
             <!-- ความสนใจ -->
             <div class="bg-[#F992AF]/50 p-6 rounded-3xl grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <h2 class="font-bold mb-2">ความสนใจ(สามารถเลือกได้มากว่า 1 คำตอบ)</h2>
+                    <h2 class="font-bold mb-2">ความสนใจ (เลือกได้มากกว่า 1 ข้อ)</h2>
 
                     <label class="block" v-for="item in interestds" :key="item.interest_ID">
                         <input type="checkbox"
@@ -256,13 +275,11 @@ function resetForm() {
                     </label>
                 </div>
                 <div>
-
                     <fieldset class="fieldset">
                         <legend class="fieldset-legend text-lg">หมวดวิชา (กลุ่มวิชา)</legend>
                         <select class="select select-error w-full" v-model="selectedGroupType">
                             <option disabled value="">-- เลือกกลุ่มวิชา --</option>
-                            <option v-for="group in subjectGroups" :key="group.GroupType_ID"
-                                :value="group.GroupType_ID">
+                            <option v-for="group in subjectGroups" :key="group.GroupType_ID" :value="group.GroupType_ID">
                                 {{ group.GroupType_Name }}
                             </option>
                         </select>
@@ -278,29 +295,25 @@ function resetForm() {
                         </select>
                     </fieldset>
 
-
-
                     <label class="block mt-4">
                         <span class="font-semibold">เกรดที่ได้</span>
                         <select v-model="selectedGrade" class="select select-error w-full mt-3">
                             <option disabled value="">กรุณาระบุ</option>
-                            <option v-for="grades in grades" :key="grades.grade_ID" :value="grades.grade_ID">
-                                {{ grades.grade_Name }}
+                            <option v-for="g in grades" :key="g.grade_ID" :value="g.grade_ID">
+                                {{ g.grade_Name }}
                             </option>
-
                         </select>
                     </label>
                 </div>
             </div>
 
+            <!-- (ส่วนคำถามต่าง ๆ เหมือนเดิม) -->
             <!-- งานกลุ่ม -->
             <div class="bg-[#FFAE00]/35 p-6 rounded-3xl">
                 <h2 class="font-bold mb-3">เลือกคำตอบที่นิสิตคิดว่าตรงกับตนเองมากที่สุด</h2>
                 <fieldset class="mb-4 pl-5">
                     <legend>
-                        1. มีการมอบหมาย 
-                        <span style="color:red;">งานกลุ่ม</span> 
-                        ในรายวิชาอย่างไร <span style="color:red;">*</span>
+                        1. มีการมอบหมาย <span style="color:red;">งานกลุ่ม</span> ในรายวิชาอย่างไร <span style="color:red;">*</span>
                     </legend>
                     <div class="pl-5 space-y-2">
                         <label class="block" v-for="item in groupwork" :key="item.groupwork_ID">
@@ -312,12 +325,11 @@ function resetForm() {
                 </fieldset>
             </div>
 
+            <!-- งานเดี่ยว -->
             <div class="bg-[#FBCAA8]/95 p-6 rounded-3xl">
                 <fieldset class="pl-5">
                     <legend>
-                        2. มีการมอบหมาย 
-                        <span style="color:red;">งานเดี่ยว</span> 
-                        ในรายวิชาอย่างไร <span style="color:red;">*</span>
+                        2. มีการมอบหมาย <span style="color:red;">งานเดี่ยว</span> ในรายวิชาอย่างไร <span style="color:red;">*</span>
                     </legend>
                     <div class="pl-5">
                         <label class="block" v-for="item in soloWork" :key="item.solowork_ID">
@@ -325,17 +337,15 @@ function resetForm() {
                                 :value="item.solowork_ID" v-model="selectedsolowork">
                             {{ item.solowork_Name }}
                         </label>
-
                     </div>
                 </fieldset>
             </div>
 
+            <!-- การสอบ -->
             <div class="bg-[#F992AF]/50 p-6 rounded-3xl">
                 <fieldset class="pl-5">
                     <legend>
-                        3.นิสิตต้องการให้มีรูปแบบ
-                        <span style="color:red;">การสอบ</span> แบบใด 
-                        <span style="color:red;">*</span>
+                        3. นิสิตต้องการให้มีรูปแบบ <span style="color:red;">การสอบ</span> แบบใด <span style="color:red;">*</span>
                     </legend>
                     <div class="pl-5">
                         <label class="block" v-for="item in exam" :key="item.exam_ID">
@@ -347,28 +357,27 @@ function resetForm() {
                 </fieldset>
             </div>
 
+            <!-- เช็คชื่อ -->
             <div class="bg-[#FFAE00]/35 p-6 rounded-3xl">
                 <fieldset class="pl-5">
                     <legend>
-                        4.นิสิตต้องการให้มีการ <span style="color:red;">เช็คชื่อ</span> เข้าห้องเรียนอย่างไร 
-                        <span style="color:red;">*</span>
+                        4. นิสิตต้องการให้มีการ <span style="color:red;">เช็คชื่อ</span> เข้าห้องเรียนอย่างไร <span style="color:red;">*</span>
                     </legend>
                     <div class="pl-5">
                         <label class="block" v-for="item in attendance" :key="item.attendance_ID">
                             <input type="radio" class="radio radio-sm radio-error bg-white/50" name="attendance"
                                 :value="item.attendance_ID" v-model="selectedattendance">
                             {{ item.attendance_Name }}
-
                         </label>
                     </div>
                 </fieldset>
             </div>
 
+            <!-- การสอน (checkbox) -->
             <div class="bg-[#FBCAA8]/95 p-6 rounded-3xl">
                 <fieldset class="pl-5 space-y-2">
                     <legend>
-                    5.นิสิตต้องการให้รูปแบบ <span style="color:red;">การสอน</span> เป็นอย่างไร (ตอบได้มากกว่า 1 ข้อ)
-                    <span style="color:red;">*</span>
+                        5. นิศิตต้องการให้รูปแบบ <span style="color:red;">การสอน</span> เป็นอย่างไร (ตอบได้มากกว่า 1 ข้อ) <span style="color:red;">*</span>
                     </legend>
 
                     <div class="pl-5">
@@ -391,88 +400,85 @@ function resetForm() {
                 </fieldset>
             </div>
 
-
+            <!-- นำเสนอ -->
             <div class="bg-[#F992AF]/50 p-6 rounded-3xl">
                 <fieldset class="pl-5">
                     <legend>
-                        6.นิสิตชอบให้มีการ
-                        <span style="color:red;">นำเสนอหน้าชั้นเรียน</span> มากน้อยเพียงใด
-                        <span style="color:red;">*</span>
+                        6. นิศิตชอบให้มีการ <span style="color:red;">นำเสนอหน้าชั้นเรียน</span> มากน้อยเพียงใด <span style="color:red;">*</span>
                     </legend>
                     <div class="pl-5">
                         <label class="block" v-for="item in present" :key="item.present_ID">
-                            <input type="radio" class="radio radio-sm radio-error bg-white/50" name="present"
-                                :value="item.present_ID" v-model="selectedpresent">
+                            <input type="radio" name="present" class="radio radio-sm radio-error bg-white/50"
+                              :value="item.present_ID" v-model="selectedpresent">
                             {{ item.present_Name }}
-
                         </label>
                     </div>
                 </fieldset>
             </div>
 
+            <!-- ประสบการณ์ -->
             <div class="bg-[#FFAE00]/35 p-6 rounded-3xl">
                 <fieldset class="pl-5">
                    <legend>
-                        7.นิสิตต้องการ
-                        <span style="color:red;">ประสบการณ์ใหม่ๆ</span> จากวิชานี้หรือไม่
-                        <span style="color:red;">*</span>
+                        7. นิศิตต้องการ <span style="color:red;">ประสบการณ์ใหม่ๆ</span> จากวิชานี้หรือไม่ <span style="color:red;">*</span>
                     </legend>
                     <div class="pl-5">
                         <label class="block" v-for="item in experience" :key="item.experience_ID">
-                            <input type="radio" class="radio radio-sm radio-error bg-white/50" name="experience"
-                                :value="item.experience_ID" v-model="selectedexperience">
+                            <input type="radio" name="experience" class="radio radio-sm radio-error bg-white/50"
+                              :value="item.experience_ID" v-model="selectedexperience">
                             {{ item.experience_Name }}
                         </label>
                     </div>
                 </fieldset>
             </div>
 
+            <!-- ความยากง่าย -->
             <div class="bg-[#FBCAA8]/95 p-6 rounded-3xl">
                 <fieldset class="pl-5">
                     <legend>
-                        8.ระดับ
-                        <span style="color:red;">ความยากง่าย</span> ที่นิสิตต้องการ 
-                        <span style="color:red;">*</span>
+                        8. ระดับ <span style="color:red;">ความยากง่าย</span> ที่นิสิตต้องการ <span style="color:red;">*</span>
                     </legend>
                     <div class="pl-5">
                         <label class="block" v-for="item in challenge" :key="item.challenge_ID">
-                            <input type="radio" class="radio radio-sm radio-error bg-white/50" name="challenge"
-                                :value="item.challenge_ID" v-model="selectedchallenge">
+                            <input type="radio" name="challenge" class="radio radio-sm radio-error bg-white/50"
+                              :value="item.challenge_ID" v-model="selectedchallenge">
                             {{ item.challenge_Name }}
                         </label>
                     </div>
                 </fieldset>
             </div>
 
+            <!-- ช่วงเวลา -->
             <div class="bg-[#F992AF]/50 p-6 rounded-3xl">
                 <fieldset class="pl-5">
                     <legend>
-                       9.
-                        <span style="color:red;">ช่วงเวลา</span> ในการเรียนที่นิสิตต้องการ(ช่วงเช้า = 8.00-11.50 , ช่วงบ่าย = 13.00-16.50)
-                        <span style="color:red;">*</span>
+                       9. <span style="color:red;">ช่วงเวลา</span> ในการเรียนที่นิสิตต้องการ (เช้า/บ่าย) <span style="color:red;">*</span>
                     </legend>
                     <div class="pl-5">
                         <label class="block" v-for="item in time" :key="item.time_ID">
-                            <input type="radio" class="radio radio-sm radio-error bg-white/50" name="time"
-                                :value="item.time_ID" v-model="selectedtime">
+                            <input type="radio" name="time" class="radio radio-sm radio-error bg-white/50"
+                              :value="item.time_ID" v-model="selectedtime">
                             {{ item.time_Name }}
                         </label>
                     </div>
                 </fieldset>
             </div>
 
+            <!-- ความรู้สึก -->
             <div class="bg-[#FFAE00]/35 p-6 rounded-3xl">
                 <fieldset class="fieldset">
                     <legend class="fieldset-legend text-lg">ความรู้สึกที่มีต่อรายวิชานี้</legend>
                     <textarea v-model="reviewText" class="textarea textarea-warning h-24 w-full"
                         placeholder="กรุณากรอกความรู้สึก"></textarea>
-
                 </fieldset>
             </div>
 
             <!-- ปุ่ม submit -->
             <div class="text-center">
-                <button type="submit" class="btn bg-[#CD5C5C] hover:bg-[#B22222] text-white">Submit</button>
+                <button type="submit" :disabled="submitLoading" class="btn bg-[#CD5C5C] hover:bg-[#B22222] text-white">
+                  <span v-if="submitLoading">กำลังบันทึก…</span>
+                  <span v-else>Submit</span>
+                </button>
             </div>
         </form>
     </Layout>
