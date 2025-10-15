@@ -2,76 +2,116 @@
 import Layout from '@/layout/Layout.vue'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faCommentDots } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 library.add(faCommentDots)
 
+// Base API URL (ตั้งใน .env: VITE_API_URL)
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 const router = useRouter()
-const popularGroups = ref([])
 
-const API = 'http://localhost:3000'
+const popularGroups = ref([])
+const loading = ref(false)
+const errorMsg = ref('')
+
+// helper: headers (ใส่ Authorization ถ้ามี token)
+function authHeaders() {
+  const headers = { 'Content-Type': 'application/json' }
+  const token = localStorage.getItem('token')
+  if (token) headers.Authorization = `Bearer ${token}`
+  return headers
+}
 
 // โหลดข้อมูล popular subjects
-onMounted(async () => {
+async function loadPopularSubjects() {
+  loading.value = true
+  errorMsg.value = ''
   try {
-    const res = await axios.get(`${API}/popular-subjects`)
-    popularGroups.value = res.data
+    const url = `${API_URL}/popular-subjects`
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: authHeaders()
+    })
+
+    // อ่าน json (หรือ null ถ้าไม่ใช่ json)
+    const j = await res.json().catch(() => null)
+    if (!res.ok) {
+      throw new Error(j?.message || res.statusText || 'Request failed')
+    }
+
+    // คาดว่า backend คืน array ของ groups
+    popularGroups.value = Array.isArray(j) ? j : (j?.items ?? [])
   } catch (err) {
     console.error('❌ โหลด popular subjects ล้มเหลว', err)
+    errorMsg.value = err.message || 'ไม่สามารถโหลดข้อมูลได้'
+  } finally {
+    loading.value = false
   }
-})
+}
 
 // ไปหน้ารีวิวรายวิชา
 function Comments(subject) {
   if (!subject?.subject_ID) return
   router.push({
-    name: 'reviewsubjects', 
+    name: 'reviewsubjects',
     params: { id: subject.subject_ID },
     query: { name: subject.subject_Name || '' },
   })
 }
+
+onMounted(() => {
+  loadPopularSubjects()
+})
 </script>
 
 <template>
   <Layout>
     <p class="text-3xl m-4 mb-5">Top 3 วิชายอดฮิตของแต่ละกลุ่มวิชา</p>
 
-    <div v-for="group in popularGroups" :key="group.group_ID" class="ml-20 ">
-      <p class="text-xl mb-2.5">{{ group.group_Name }}</p>
+    <div v-if="loading" class="ml-20 text-gray-600">กำลังโหลดข้อมูล...</div>
+    <div v-else-if="errorMsg" class="ml-20 text-red-600">{{ errorMsg }}</div>
 
-      <div class="ml-25">
-        <div>
-          <div
-            v-for="subject in group.subjects"
-            :key="subject.subject_ID"
-            class="flex justify-between items-center"
-          >
-            <!-- ชื่อวิชา -->
-            <span class="text-xl font-medium text-black">
-              {{ subject.subject_ID }} {{ subject.subject_Name }}
-              <span class="ml-2 text-sm text-gray-500">
-                ({{ subject.review_count }} รีวิว)
+    <div v-else>
+      <div v-for="group in popularGroups" :key="group.group_ID" class="ml-20 ">
+        <p class="text-xl mb-2.5">{{ group.group_Name }}</p>
+
+        <div class="ml-25">
+          <div>
+            <div
+              v-for="subject in group.subjects"
+              :key="subject.subject_ID"
+              class="flex justify-between items-center"
+            >
+              <!-- ชื่อวิชา -->
+              <span class="text-xl font-medium text-black">
+                {{ subject.subject_ID }} {{ subject.subject_Name }}
+                <span class="ml-2 text-sm text-gray-500">
+                  ({{ subject.review_count }} รีวิว)
+                </span>
               </span>
-            </span>
 
-
-            <!-- ปุ่มคอมเมนต์ -->
-            <div class="flex pr-20 gap-6">
-              <button
-                type="button"
-                class="btn btn-ghost btn-circle"
-                @click="Comments(subject)"
-                aria-label="ดูคอมเมนต์ของวิชานี้"
-                title="ดูคอมเมนต์"
-              >
-                <FontAwesomeIcon icon="comment-dots" size="xl" class="text-gray-600" />
-              </button>
+              <!-- ปุ่มคอมเมนต์ -->
+              <div class="flex pr-20 gap-6">
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-circle"
+                  @click="Comments(subject)"
+                  aria-label="ดูคอมเมนต์ของวิชานี้"
+                  title="ดูคอมเมนต์"
+                >
+                  <FontAwesomeIcon icon="comment-dots" size="xl" class="text-gray-600" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- ถ้าไม่มีข้อมูล -->
+      <div v-if="popularGroups.length === 0" class="ml-20 text-gray-600 mt-4">
+        ยังไม่มีข้อมูลวิชายอดนิยม
       </div>
     </div>
   </Layout>
