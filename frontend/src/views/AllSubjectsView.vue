@@ -149,12 +149,12 @@ function Comments (subject) {
 
 <template>
   <Layout>
-    <p class="text-3xl m-4 mb-5">หมวดวิชาศึกษาทั่วไป</p>
+    <p class="text-xl md:text-3xl md:m-4 mb-2 md:mb-5">หมวดวิชาศึกษาทั่วไป</p>
 
-    <div v-for="group in groupedSubjects" :key="group.group_ID" class="ml-20">
-      <p class="text-xl mb-2.5">{{ group.group_Name }}</p>
+    <div v-for="group in groupedSubjects" :key="group.group_ID" class="ml-3 md:ml-20">
+      <p class="text-lg md:text-xl mb-2.5">{{ group.group_Name }}</p>
 
-      <div class="ml-25">
+      <div class="ml-4 md:ml-25">
         <div>
           <div v-for="subject in group.subjects" :key="subject.subject_ID"
                class="flex justify-between items-center">
@@ -162,7 +162,7 @@ function Comments (subject) {
               {{ subject.subject_ID }} {{ subject.subject_Name }}
             </span>
 
-            <div class="flex pr-20 gap-6">
+            <div class="flex md:pr-20  md:gap-6">
               <!-- ปุ่มดูคอมเมนต์ -->
               <button type="button" class="btn btn-ghost btn-circle" @click="Comments(subject)"
                       aria-label="ดูคอมเมนต์ของวิชานี้" title="ดูคอมเมนต์">

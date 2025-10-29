@@ -210,9 +210,9 @@ function resetForm() {
 
 <template>
     <Layout>
-        <form class="p-6 space-y-6" @submit="onSubmit">
+        <form class="md:p-6 space-y-6" @submit="onSubmit">
 
-            <div class="flex gap-10">
+            <div class="md:flex gap-10">
                 <fieldset class="fieldset">
                     <legend class="fieldset-legend text-lg">รหัสนิสิต</legend>
                     <input type="text" v-model="studentId" class="input input-neutral" placeholder="กรอกรหัสนิสิต" />
@@ -244,9 +244,9 @@ function resetForm() {
 
 
             <!-- ความสนใจ -->
-            <div class="bg-[#6495ED]/50 p-6 rounded-3xl grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-[#6495ED]/50 p-4 md:p-6 rounded-3xl grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <h2 class="font-bold mb-2">ความสนใจ(สามารถเลือกได้มากว่า 1 คำตอบ)</h2>
+                    <h2 class="font-bold mb-2 text-sm md:text-base">ความสนใจ(สามารถเลือกได้มากว่า 1 คำตอบ)</h2>
 
                     <label class="block" v-for="item in interestds" :key="item.interest_ID">
                         <input type="checkbox"
@@ -258,7 +258,7 @@ function resetForm() {
                 <div>
 
                     <fieldset class="fieldset">
-                        <legend class="fieldset-legend text-lg">หมวดวิชา (กลุ่มวิชา)</legend>
+                        <legend class="fieldset-legend text-sm md:text-lg">หมวดวิชา (กลุ่มวิชา)</legend>
                         <select class="select select-neutral w-full" v-model="selectedGroupType">
                             <option disabled value="">-- เลือกกลุ่มวิชา --</option>
                             <option v-for="group in subjectGroups" :key="group.GroupType_ID"
@@ -269,7 +269,7 @@ function resetForm() {
                     </fieldset>
 
                     <fieldset class="fieldset mt-4">
-                        <legend class="fieldset-legend text-lg">รายวิชา</legend>
+                        <legend class="fieldset-legend text-sm md:text-lg">รายวิชา</legend>
                         <select class="select select-neutral w-full" v-model="selectedSubject">
                             <option disabled value="">-- เลือกรายวิชา --</option>
                             <option v-for="subject in subjects" :key="subject.subject_ID" :value="subject.subject_ID">
@@ -281,7 +281,7 @@ function resetForm() {
 
 
                     <label class="block mt-4">
-                        <span class="font-semibold">เกรดที่ได้</span>
+                        <span class="font-semibold text-sm md:text-lg">เกรดที่ได้</span>
                         <select v-model="selectedGrade" class="select select-neutral w-full mt-3">
                             <option disabled value="">กรุณาระบุ</option>
                             <option v-for="grades in grades" :key="grades.grade_ID" :value="grades.grade_ID">
@@ -294,16 +294,16 @@ function resetForm() {
             </div>
 
             <!-- งานกลุ่ม -->
-            <div class="bg-[#6495ED]/35 p-6 rounded-3xl">
-                <h2 class="font-bold mb-3">เลือกคำตอบที่นิสิตคิดว่าตรงกับตนเองมากที่สุด</h2>
-                <fieldset class="mb-4 pl-5">
+            <div class="bg-[#6495ED]/35 p-4 md:p-6 rounded-3xl">
+                <h2 class="font-bold mb-3 text-sm md:text-base">เลือกคำตอบที่นิสิตคิดว่าตรงกับตนเองมากที่สุด</h2>
+                <fieldset class="mb-4 md:pl-5 text-sm md:text-base">
                     <legend>
                         1. มีการมอบหมาย 
                         <span style="color:red;">งานกลุ่ม</span> 
                         ในรายวิชาอย่างไร <span style="color:red;">*</span>
                     </legend>
-                    <div class="pl-5 space-y-2">
-                        <label class="block" v-for="item in groupwork" :key="item.groupwork_ID">
+                    <div class="md:pl-5 mt-2">
+                        <label class="block text-sm md:text-base" v-for="item in groupwork" :key="item.groupwork_ID">
                             <input type="radio" class="radio radio-sm bg-blue-100 border-blue-500 checked:bg-blue-200 checked:text-blue-600 checked:border-blue-600" name="groupwork"
                                 :value="item.groupwork_ID" v-model="selectedGroupwork">
                             {{ item.groupwork_Name }}
@@ -312,14 +312,14 @@ function resetForm() {
                 </fieldset>
             </div>
 
-            <div class="bg-[#ADD8E6]/60 p-6 rounded-3xl">
-                <fieldset class="pl-5">
+            <div class="bg-[#ADD8E6]/60 p-4 md:p-6 rounded-3xl">
+                <fieldset class="mb-4 md:pl-5 text-sm md:text-base">
                     <legend>
                         2. มีการมอบหมาย 
                         <span style="color:red;">งานเดี่ยว</span> 
                         ในรายวิชาอย่างไร <span style="color:red;">*</span>
                     </legend>
-                    <div class="pl-5">
+                    <div class="md:pl-5 mt-2">
                         <label class="block" v-for="item in soloWork" :key="item.solowork_ID">
                             <input type="radio" class="radio radio-sm bg-blue-100 border-blue-500 checked:bg-blue-200 checked:text-blue-600 checked:border-blue-600" name="solowork"
                                 :value="item.solowork_ID" v-model="selectedsolowork">
@@ -330,14 +330,14 @@ function resetForm() {
                 </fieldset>
             </div>
 
-            <div class="bg-[#6495ED]/50 p-6 rounded-3xl">
-                <fieldset class="pl-5">
+            <div class="bg-[#6495ED]/50 p-4 md:p-6 rounded-3xl">
+                <fieldset class="mb-4 md:pl-5 text-sm md:text-base">
                     <legend>
                         3.นิสิตต้องการให้มีรูปแบบ
                         <span style="color:red;">การสอบ</span> แบบใด 
                         <span style="color:red;">*</span>
                     </legend>
-                    <div class="pl-5">
+                    <div class="md:pl-5 mt-2">
                         <label class="block" v-for="item in exam" :key="item.exam_ID">
                             <input type="radio" class="radio radio-sm bg-blue-100 border-blue-500 checked:bg-blue-200 checked:text-blue-600 checked:border-blue-600" name="exam"
                                 :value="item.exam_ID" v-model="selectedexam">
@@ -347,13 +347,13 @@ function resetForm() {
                 </fieldset>
             </div>
 
-            <div class="bg-[#6495ED]/35 p-6 rounded-3xl">
-                <fieldset class="pl-5">
+            <div class="bg-[#6495ED]/35 p-4 md:p-6 rounded-3xl">
+                <fieldset class="mb-4 md:pl-5 text-sm md:text-base">
                     <legend>
                         4.นิสิตต้องการให้มีการ <span style="color:red;">เช็คชื่อ</span> เข้าห้องเรียนอย่างไร 
                         <span style="color:red;">*</span>
                     </legend>
-                    <div class="pl-5">
+                    <div class="md:pl-5 mt-2">
                         <label class="block" v-for="item in attendance" :key="item.attendance_ID">
                             <input type="radio" class="radio radio-sm bg-blue-100 border-blue-500 checked:bg-blue-200 checked:text-blue-600 checked:border-blue-600" name="attendance"
                                 :value="item.attendance_ID" v-model="selectedattendance">
@@ -364,14 +364,14 @@ function resetForm() {
                 </fieldset>
             </div>
 
-            <div class="bg-[#ADD8E6]/60 p-6 rounded-3xl">
-                <fieldset class="pl-5 space-y-2">
+            <div class="bg-[#ADD8E6]/60 p-4 md:p-6 rounded-3xl">
+                <fieldset class="mb-4 md:pl-5 text-sm md:text-base space-y-2">
                     <legend>
                     5.นิสิตต้องการให้รูปแบบ <span style="color:red;">การสอน</span> เป็นอย่างไร (ตอบได้มากกว่า 1 ข้อ)
                     <span style="color:red;">*</span>
                     </legend>
 
-                    <div class="pl-5">
+                    <div class="md:pl-5">
                     <label
                         class="flex items-center gap-2 py-1"
                         v-for="item in instruction"
@@ -392,14 +392,14 @@ function resetForm() {
             </div>
 
 
-            <div class="bg-[#6495ED]/50 p-6 rounded-3xl">
-                <fieldset class="pl-5">
+            <div class="bg-[#6495ED]/50 p-4 md:p-6 rounded-3xl">
+                <fieldset class="mb-4 md:pl-5 text-sm md:text-base">
                     <legend>
                         6.นิสิตชอบให้มีการ
                         <span style="color:red;">นำเสนอหน้าชั้นเรียน</span> มากน้อยเพียงใด
                         <span style="color:red;">*</span>
                     </legend>
-                    <div class="pl-5">
+                    <div class="md:pl-5 mt-2">
                         <label class="block" v-for="item in present" :key="item.present_ID">
                             <input type="radio" class="radio radio-sm bg-blue-100 border-blue-500 checked:bg-blue-200 checked:text-blue-600 checked:border-blue-600" name="present"
                                 :value="item.present_ID" v-model="selectedpresent">
@@ -410,14 +410,14 @@ function resetForm() {
                 </fieldset>
             </div>
 
-            <div class="bg-[#6495ED]/35 p-6 rounded-3xl">
-                <fieldset class="pl-5">
+            <div class="bg-[#6495ED]/35 p-4 md:p-6 rounded-3xl">
+                <fieldset class="mb-4 md:pl-5 text-sm md:text-base">
                    <legend>
                         7.นิสิตต้องการ
                         <span style="color:red;">ประสบการณ์ใหม่ๆ</span> จากวิชานี้หรือไม่
                         <span style="color:red;">*</span>
                     </legend>
-                    <div class="pl-5">
+                    <div class="md:pl-5 mt-2">
                         <label class="block" v-for="item in experience" :key="item.experience_ID">
                             <input type="radio" class="radio radio-sm bg-blue-100 border-blue-500 checked:bg-blue-200 checked:text-blue-600 checked:border-blue-600" name="experience"
                                 :value="item.experience_ID" v-model="selectedexperience">
@@ -427,14 +427,14 @@ function resetForm() {
                 </fieldset>
             </div>
 
-            <div class="bg-[#ADD8E6]/60 p-6 rounded-3xl">
-                <fieldset class="pl-5">
+            <div class="bg-[#ADD8E6]/60 p-4 md:p-6 rounded-3xl">
+                <fieldset class="mb-4 md:pl-5 text-sm md:text-base">
                     <legend>
                         8.ระดับ
                         <span style="color:red;">ความยากง่าย</span> ที่นิสิตต้องการ 
                         <span style="color:red;">*</span>
                     </legend>
-                    <div class="pl-5">
+                    <div class="md:pl-5 mt-2">
                         <label class="block" v-for="item in challenge" :key="item.challenge_ID">
                             <input type="radio" class="radio radio-sm bg-blue-100 border-blue-500 checked:bg-blue-200 checked:text-blue-600 checked:border-blue-600" name="challenge"
                                 :value="item.challenge_ID" v-model="selectedchallenge">
@@ -444,14 +444,14 @@ function resetForm() {
                 </fieldset>
             </div>
 
-            <div class="bg-[#6495ED]/50 p-6 rounded-3xl">
-                <fieldset class="pl-5">
+            <div class="bg-[#6495ED]/50 p-4 md:p-6 rounded-3xl">
+                <fieldset class="mb-4 md:pl-5 text-sm md:text-base">
                     <legend>
                        9.
                         <span style="color:red;">ช่วงเวลา</span> ในการเรียนที่นิสิตต้องการ(ช่วงเช้า = 8.00-11.50 , ช่วงบ่าย = 13.00-16.50)
                         <span style="color:red;">*</span>
                     </legend>
-                    <div class="pl-5">
+                    <div class="md:pl-5 mt-2">
                         <label class="block" v-for="item in time" :key="item.time_ID">
                             <input type="radio" class="radio radio-sm bg-blue-100 border-blue-500 checked:bg-blue-200 checked:text-blue-600 checked:border-blue-600" name="time"
                                 :value="item.time_ID" v-model="selectedtime">
@@ -461,9 +461,9 @@ function resetForm() {
                 </fieldset>
             </div>
 
-            <div class="bg-[#6495ED]/35 p-6 rounded-3xl">
+            <div class="bg-[#6495ED]/35 p-4 md:p-6 rounded-3xl">
                 <fieldset class="fieldset">
-                    <legend class="fieldset-legend text-lg">ความรู้สึกที่มีต่อรายวิชานี้</legend>
+                    <legend class="fieldset-legend text-base md:text-lg">ความรู้สึกที่มีต่อรายวิชานี้</legend>
                     <textarea v-model="reviewText" class="textarea textarea-neutral h-24 w-full"
                         placeholder="กรุณากรอกความรู้สึก"></textarea>
 

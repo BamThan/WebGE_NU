@@ -33,8 +33,8 @@ onMounted(() => {
 
 <template>
   <Layout>
-    <div class="bg-[#6495ED]/35 shadow p-6 rounded-3xl mt-10 mx-3">
-      <h1 class="text-3xl font-bold text-black/70">วิชาที่เหมาะกับนิสิต</h1>
+    <div class="bg-[#6495ED]/35 shadow p-6 rounded-3xl lg:mt-10 lg:mx-3">
+      <h1 class="text-lg md:text-3xl text-center md:text-start font-bold text-black/70">วิชาที่เหมาะกับนิสิต</h1>
 
       <div v-if="store.errorMsg" class="alert alert-error">{{ store.errorMsg }}</div>
 
@@ -42,22 +42,22 @@ onMounted(() => {
         ยังไม่มีผลลัพธ์ (กรุณาคำนวณจากหน้าแนะนำรายวิชาก่อน)
       </div>
 
-      <div v-else class="ml-5 mt-5">
+      <div v-else class="md:ml-5 mt-2 md:mt-5">
         <div v-for="g in groups" :key="g.group_type || g.group_type_name" class="mb-8">
-          <h2 class="text-2xl font-bold mb-3 text-[#696969]">
+          <h2 class="text-base md:text-2xl font-bold mb-3 text-[#696969]">
             {{ g.group_type_name || g.group_type }}
           </h2>
 
           <div v-if="!g.items || !g.items.length" class="opacity-60">— ไม่มีผลลัพธ์ในกลุ่มนี้ —</div>
 
-          <div v-else class="ml-15 mt-6">
-            <div v-for="c in g.items" :key="c.subject_ID" class="flex justify-between my-4">
-              <div class="text-xl">
+          <div v-else class="md:ml-15 ml-3 md:mt-6">
+            <div v-for="c in g.items" :key="c.subject_ID" class="md:flex justify-between my-4">
+              <div class="text-base md:text-xl">
                 {{ c.subject_Name || ('วิชา #' + c.subject_ID) }}
               </div>
-              <div class="flex gap-3 items-center">
+              <div class="flex gap-3 items-center md:mt-0 mt-2">
                 <!-- ✅ เกรดของเคส -->
-                <div class="badge badge-ghost badge-lg">
+                <div class="badge badge-ghost h-10 w-46 text-xs md:text-base">
                   เกรดที่คาดว่าจะได้ : {{ c.grade_Name || c.grade_ID || '-' }}
                 </div>
 

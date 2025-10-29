@@ -282,12 +282,12 @@ async function onSubmit() {
 <template>
     <Layout>
 
-        <form class="p-6 space-y-6" @submit.prevent="onSubmit">
+        <form class="md:p-6 space-y-6" @submit.prevent="onSubmit">
             <!-- ความสนใจ -->
-            <div class="bg-[#6495ED]/50 p-6 rounded-3xl grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-[#6495ED]/50 p-4 md:p-6 rounded-3xl grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <h2 class="font-bold mb-2">ความสนใจ (เลือกได้มากกว่า 1 คำคอบ)</h2>
-                    <label class="block" v-for="it in interestds" :key="it.interest_ID"
+                    <h2 class="font-bold mb-2 text-sm md:text-base">ความสนใจ (เลือกได้มากกว่า 1 คำตอบ)</h2>
+                    <label class="block text-sm md:text-base" v-for="it in interestds" :key="it.interest_ID"
                         :for="`interest-${it.interest_ID}`">
                         <input type="checkbox"
                             class="checkbox checkbox-sm border-blue-500 bg-blue-300 checked:border-blue-700 checked:bg-blue-600"
@@ -297,8 +297,8 @@ async function onSubmit() {
                     </label>
                 </div>
                 <div>
-                    <h2 class="font-bold mb-2">หมวดวิชาศึกษาทั่วไปที่นิสิตจะลงเรียน</h2>
-                    <label class="block" v-for="g in subjectGroups" :key="g.GroupType_ID">
+                    <h2 class="font-bold mb-2 text-sm md:text-base">หมวดวิชาศึกษาทั่วไปที่นิสิตจะลงเรียน</h2>
+                    <label class="block text-sm md:text-base" v-for="g in subjectGroups" :key="g.GroupType_ID">
                         <input type="checkbox"
                             class="checkbox checkbox-sm border-blue-500 bg-blue-300 checked:border-blue-700 checked:bg-blue-600"
                             :value="g.GroupType_ID" v-model="selectedGroupTypes">
@@ -308,16 +308,16 @@ async function onSubmit() {
             </div>
 
             <!-- งานกลุ่ม -->
-            <div class="bg-[#6495ED]/35 p-6 rounded-3xl">
-                <h2 class="font-bold mb-3">เลือกคำตอบที่นิสิตคิดว่าตรงกับตนเองมากที่สุด</h2>
-                <fieldset class="mb-4 pl-5">
+            <div class="bg-[#6495ED]/35 p-4 md:p-6 rounded-3xl">
+                <h2 class="font-bold mb-3 text-sm md:text-base">เลือกคำตอบที่นิสิตคิดว่าตรงกับตนเองมากที่สุด</h2>
+                <fieldset class="mb-4 md:pl-5 text-sm md:text-base">
                     <legend>
                         1. นิสิตต้องการให้มีการมอบหมาย
                         <a class="underline decoration-red-500 text-red-500">งานกลุ่ม</a>ในรายวิชาอย่างไร
                         <a class="text-red-500">*</a>
                     </legend>
-                    <div class="pl-5">
-                        <label class="block" v-for="o in groupwork" :key="o.groupwork_ID">
+                    <div class="md:pl-5 mt-2">
+                        <label class="block text-sm md:text-base" v-for="o in groupwork" :key="o.groupwork_ID">
                             <input type="radio" name="groupwork"
                                 class="radio radio-sm bg-blue-100 border-blue-500 checked:bg-blue-200 checked:text-blue-600 checked:border-blue-600"
                                 :value="o.groupwork_ID" v-model="selectedGroupwork">
@@ -327,14 +327,14 @@ async function onSubmit() {
                 </fieldset>
             </div>
 
-            <div class="bg-[#ADD8E6]/60 p-6 rounded-3xl">
-                <fieldset class="pl-5">
+            <div class="bg-[#ADD8E6]/60 p-4 md:p-6 rounded-3xl">
+                <fieldset class="mb-4 md:pl-5 text-sm md:text-base">
                     <legend>
                         2. นิสิตต้องการให้มีการมอบหมาย
                         <a class="underline decoration-red-500 text-red-500">งานเดี่ยว</a>ในรายวิชาอย่างไร
                         <a class="text-red-500">*</a>
                     </legend>
-                    <div class="pl-5">
+                    <div class="md:pl-5 mt-2">
                         <label class="block" v-for="o in soloWork" :key="o.solowork_ID">
                             <input type="radio" name="solowork"
                                 class="radio radio-sm bg-blue-100 border-blue-500 checked:bg-blue-200 checked:text-blue-600 checked:border-blue-600 bg-white/50"
@@ -346,14 +346,14 @@ async function onSubmit() {
                 </fieldset>
             </div>
 
-            <div class="bg-[#6495ED]/50 p-6 rounded-3xl">
-                <fieldset class="pl-5">
+            <div class="bg-[#6495ED]/50 p-4 md:p-6 rounded-3xl">
+                <fieldset class="mb-4 md:pl-5 text-sm md:text-base">
                     <legend>
                         3.นิสิตต้องการให้มีรูปแบบ
                         <a class="underline decoration-red-500 text-red-500">การสอบ</a> แบบใด
                         <a class="text-red-500">*</a>
                     </legend>
-                    <div class="pl-5">
+                    <div class="md:pl-5 mt-2">
                         <label class="block" v-for="o in exam" :key="o.exam_ID">
                             <input type="radio" name="exam"
                                 class="radio radio-sm bg-blue-100 border-blue-500 checked:bg-blue-200 checked:text-blue-600 checked:border-blue-600"
@@ -366,14 +366,14 @@ async function onSubmit() {
 
             </div>
 
-            <div class="bg-[#6495ED]/35 p-6 rounded-3xl">
-                <fieldset class="pl-5">
+            <div class="bg-[#6495ED]/35 p-4 md:p-6 rounded-3xl">
+                <fieldset class="mb-4 md:pl-5 text-sm md:text-base">
                     <legend>
                         4.นิสิตต้องการให้มีการ
                         <a class="underline decoration-red-500 text-red-500">เช็คชื่อ</a> เข้าห้องเรียนอย่างไร
                         <a class="text-red-500">*</a>
                     </legend>
-                    <div class="pl-5">
+                    <div class="md:pl-5 mt-2">
                         <label class="block" v-for="o in attendance" :key="o.attendance_ID">
                             <input type="radio" name="attendance"
                                 class="radio radio-sm bg-blue-100 border-blue-500 checked:bg-blue-200 checked:text-blue-600 checked:border-blue-600"
@@ -385,15 +385,15 @@ async function onSubmit() {
             </div>
 
 
-            <div class="bg-[#ADD8E6]/60 p-6 rounded-3xl">
-                <fieldset class="pl-5">
+            <div class="bg-[#ADD8E6]/60 p-4 md:p-6 rounded-3xl">
+                <fieldset class="mb-4 md:pl-5 text-sm md:text-base">
                     <legend>
                         5.นิสิตต้องการให้รูปแบบ
                         <a class="underline decoration-red-500 text-red-500">การสอน</a> เป็นอย่างไร (ตอบได้มากกว่า 1
                         ข้อ)
                         <a class="text-red-500">*</a>
                     </legend>
-                    <div class="pl-5">
+                    <div class="md:pl-5 mt-2">
                         <label class="block" v-for="o in instruction" :key="o.instruction_ID"
                             :for="`inst-${o.instruction_ID}`">
                             <input type="checkbox"
@@ -408,14 +408,14 @@ async function onSubmit() {
 
 
             <!-- 6. นำเสนอ -->
-            <div class="bg-[#6495ED]/50 p-6 rounded-3xl">
-                <fieldset class="pl-5">
+            <div class="bg-[#6495ED]/50 p-4 md:p-6 rounded-3xl">
+                <fieldset class="mb-4 md:pl-5 text-sm md:text-base">
                     <legend>
                         6.นิสิตชอบให้มีการ
                         <a class="underline decoration-red-500 text-red-500">นำเสนอหน้าชั้นเรียน</a> มากน้อยเพียงใด
                         <a class="text-red-500">*</a>
                     </legend>
-                    <div class="pl-5">
+                    <div class="md:pl-5 mt-2">
                         <label class="block" v-for="o in present" :key="o.present_ID">
                             <input type="radio" name="present"
                                 class="radio radio-sm bg-blue-100 border-blue-500 checked:bg-blue-200 checked:text-blue-600 checked:border-blue-600"
@@ -427,14 +427,14 @@ async function onSubmit() {
             </div>
 
 
-            <div class="bg-[#6495ED]/35 p-6 rounded-3xl">
-                <fieldset class="pl-5">
+            <div class="bg-[#6495ED]/35 p-4 md:p-6 rounded-3xl">
+                <fieldset class="mb-4 md:pl-5 text-sm md:text-base">
                     <legend>
                         7.นิสิตต้องการ
                         <a class="underline decoration-red-500 text-red-500">ประสบการณ์ใหม่ๆ</a> จากวิชานี้หรือไม่
                         <a class="text-red-500">*</a>
                     </legend>
-                    <div class="pl-5">
+                    <div class="md:pl-5 mt-2">
                         <label class="block" v-for="o in experience" :key="o.experience_ID">
                             <input type="radio" name="experience" class="radio radio-sm bg-blue-100 border-blue-500 checked:bg-blue-200 checked:text-blue-600 checked:border-blue-600
                             " :value="o.experience_ID" v-model="selectedexperience">
@@ -444,14 +444,14 @@ async function onSubmit() {
                 </fieldset>
             </div>
 
-            <div class="bg-[#ADD8E6]/60 p-6 rounded-3xl">
-                <fieldset class="pl-5">
+            <div class="bg-[#ADD8E6]/60 p-4 md:p-6 rounded-3xl">
+                <fieldset class="mb-4 md:pl-5 text-sm md:text-base">
                     <legend>
                         8.ระดับ
                         <a class="underline decoration-red-500 text-red-500">ความยากง่าย</a> ที่นิสิตต้องการ
                         <a class="text-red-500">*</a>
                     </legend>
-                    <div class="pl-5">
+                    <div class="md:pl-5 mt-2">
                         <label class="block" v-for="o in challenge" :key="o.challenge_ID">
                             <input type="radio" name="challenge"
                                 class="radio radio-sm bg-blue-100 border-blue-500 checked:bg-blue-200 checked:text-blue-600 checked:border-blue-600"
@@ -462,15 +462,15 @@ async function onSubmit() {
                 </fieldset>
             </div>
 
-            <div class="bg-[#6495ED]/50 p-6 rounded-3xl">
-                <fieldset class="pl-5">
+            <div class="bg-[#6495ED]/50 p-4 md:p-6 rounded-3xl">
+                <fieldset class="mb-4 md:pl-5 text-sm md:text-base">
                     <legend>
                         9.
                         <a class="underline decoration-red-500 text-red-500">ช่วงเวลา</a>
                         ในการเรียนที่นิสิตต้องการ(ช่วงเช้า = 8.00-11.50 , ช่วงบ่าย = 13.00-16.50)
                         <a class="text-red-500">*</a>
                     </legend>
-                    <div class="pl-5">
+                    <div class="md:pl-5 mt-2">
                         <label class="block" v-for="o in time" :key="o.time_ID">
                             <input type="radio" name="time"
                                 class="radio radio-sm bg-blue-100 border-blue-500 checked:bg-blue-200 checked:text-blue-600 checked:border-blue-600"
@@ -488,7 +488,7 @@ async function onSubmit() {
                     {{errorMsg }} 
                 </div> 
                 <button type="submit"
-                    class="btn bg-blue-900 hover:bg-[#192F4E] text-white text-xl mt-3 p-6"> 
+                    class="btn bg-blue-900 hover:bg-[#192F4E] text-white text-lg md:text-xl md:mt-3 p-6"> 
                     วิเคราะห์
                 </button>
             </div>

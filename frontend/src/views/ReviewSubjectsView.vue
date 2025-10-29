@@ -54,15 +54,15 @@ function back() {
 
 <template>
     <Layout>
-        <div class="p-6 space-y-4">
+        <div class="md:p-6 space-y-4">
             <div class="flex items-center justify-between">
-                <div class="text-2xl font-bold">รีวิวจากรุ่นพี่</div>
-                <button class="btn btn-active" @click="back">ย้อนกลับ</button>
+                <div class="text-xl md:text-2xl font-bold">รีวิวจากรุ่นพี่</div>
+                <button class="btn bg-blue-900 hover:bg-[#192F4E] text-white" @click="back">ย้อนกลับ</button>
             </div>
 
             <div class=" bg-base-200/70 rounded-4xl py-5 shadow">
-                <div class="ml-13">
-                    <div class="text-xl font-bold">
+                <div class="mx-4 md:ml-13">
+                    <div class="text-lg md:text-xl font-bold">
                         วิชา {{ subjectName }}
                     </div>
 

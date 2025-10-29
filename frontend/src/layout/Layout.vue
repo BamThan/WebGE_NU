@@ -34,14 +34,6 @@ onMounted(async () => {
     user.value.faculty_ID = (localStorage.getItem('facultyId') || localStorage.getItem('faculty_ID') || '').toString()
     user.value.name = localStorage.getItem('studentName') || ''
 
-    console.log('[Layout] LS:', {
-        email: localStorage.getItem('userEmail'),
-        student_ID: localStorage.getItem('student_ID'),
-        studentLevel: localStorage.getItem('studentLevel'),
-        facultyId: localStorage.getItem('facultyId'),
-        studentName: localStorage.getItem('studentName'),
-    })
-
     // โหลดรายชื่อคณะ (ID → Name)
     try {
         const res = await fetch('http://localhost:3000/faculty')
@@ -90,7 +82,6 @@ async function saveName() {
     user.value.name = updatedUser.student_Name; // อัปเดต UI
     localStorage.setItem('studentName', updatedUser.student_Name); // อัปเดต Local Storage
     
-    alert('อัปเดตชื่อสำเร็จ!');
 
   } catch (error) {
     console.error('Failed to update name:', error);
@@ -124,7 +115,7 @@ function logout() {
     <div class="min-h-screen">
         <!-- ✅ Navbar -->
         <nav
-            class="fixed top-5 left-10 right-10 z-50 bg-white/80 shadow-md shadow-blue-950 h-20 flex items-center justify-between px-4 rounded-2xl">
+            class="fixed top-3 left-3 right-3 md:top-5 md:left-10 md:right-10 z-50 bg-white/80 shadow-md shadow-blue-950 h-20 flex items-center justify-between px-4 rounded-2xl">
             <div class="flex items-center gap-2">
                 <button class="btn btn-square btn-ghost lg:hidden" @click="sidebarOpen = !sidebarOpen">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
@@ -133,7 +124,7 @@ function logout() {
                             d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
-                <button @click="home" class="btn btn-ghost text-3xl">
+                <button @click="home" class="btn btn-ghost text-3xl hidden md:inline">
                     GE NU
                 </button>
             </div>
@@ -142,12 +133,12 @@ function logout() {
                     title="รายการโปรด">
                     <FontAwesomeIcon icon="heart-circle-check" size="2xl" class="text-red-500 cursor-pointer" />
                 </button>
-                <span class="text-2xl font-semibold">{{ user.name || '—' }}</span>
+                <span class="md:text-2xl font-semibold text-sm">{{ user.name || '—' }}</span>
                 <div class="dropdown dropdown-end">
                     <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
                         <FontAwesomeIcon icon="chevron-down" size="xl" />
                     </div>
-                    <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box mt-3 w-52 p-2 shadow">
+                    <ul tabindex="0" class="menu menu-xl dropdown-content bg-base-100 rounded-box mt-3 w-52 p-2 shadow">
                         <li><button @click="openProfile">Profile</button></li>
                         <li><button @click="logout">Logout</button></li>
                     </ul>
@@ -164,7 +155,7 @@ function logout() {
                                 </div>
                             </div>
                             <div>
-                                <div v-if="!isEditingName" class="mt-3 text-xl font-semibold text-[#330000]">
+                                <div v-if="!isEditingName" class="mt-3 text-sm md:text-xl font-semibold text-[#330000]">
                                     {{ user.name || '—' }}
                                     <FontAwesomeIcon icon="pen"
                                         class="text-base-200 cursor-pointer ml-2 hover:text-white" title="แก้ไขชื่อ"
@@ -189,11 +180,11 @@ function logout() {
                         <div class="grid grid-cols-2 gap-4 text-lg">
                             <div class="p-4 rounded-box bg-base-200 shadow-xl/20">
                                 <div class="opacity-60 text-base">ชั้นปี</div>
-                                <div class="font-medium text-xl">{{ user.student_level || '—' }}</div>
+                                <div class="font-medium md:text-xl">{{ user.student_level || '—' }}</div>
                             </div>
                             <div class="p-4 rounded-box bg-base-200 shadow-xl/20">
                                 <div class="opacity-60 text-base">คณะ</div>
-                                <div class="font-medium text-xl">{{ facultyName }}</div>
+                                <div class="font-medium text-sm md:text-xl">{{ facultyName }}</div>
                             </div>
                         </div>
 
@@ -209,7 +200,7 @@ function logout() {
 
         <!-- ✅ Sidebar  -->
         <aside
-            :class="['fixed top-28 bottom-4 left-10 z-40 bg-[#192F4E] text-white/80 w-56 p-4 shadow-sm rounded-l-2xl', sidebarOpen ? 'block' : 'hidden', 'lg:block']">
+            :class="['fixed top-28 md:bottom-4 left-10 z-40 bg-[#192F4E] text-white/80 w-56 p-4 shadow-sm lg:rounded-r-none rounded-2xl', sidebarOpen ? 'block' : 'hidden', 'lg:block']">
             <nav class="space-y-2">
                 <router-link to="/" class="flex items-center px-4 py-2 rounded-lg gap-2">
                     <FontAwesomeIcon icon="house-chimney" size="xl" />
@@ -231,7 +222,7 @@ function logout() {
         </aside>
 
         <!-- ✅ พื้นที่ของview -->
-        <main class="pt-28 h-screen pr-4 pb-4 mr-6 ml-10 lg:pl-54">
+        <main class="pt-25 pr-3 pb-3 ml-3 md:pt-28 h-screen md:pr-4 md:pb-4 md:mr-6 md:ml-10 lg:pl-54">
             <div class="bg-white/90 w-full h-full shadow-lg p-6 overflow-y-auto rounded-2xl lg:rounded-l-none">
                 <slot></slot>
             </div>

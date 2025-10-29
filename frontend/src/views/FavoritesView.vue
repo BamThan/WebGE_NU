@@ -110,8 +110,8 @@ onMounted(async () => {
 
 <template>
   <Layout>
-    <div class="p-6">
-      <h1 class="text-2xl font-semibold mb-4">รายการโปรดของฉัน</h1>
+    <div class="pr-2 pl-2 md:p-6">
+      <h1 class="text-xl md:text-2xl font-semibold mb-2~ md:mb-4">รายการโปรดของฉัน</h1>
 
       <!-- ยังไม่ได้ล็อกอิน -->
       <div v-if="!isLoggedIn" class="text-gray-600">
@@ -135,7 +135,7 @@ onMounted(async () => {
         </div>
 
         <div v-for="group in groupedFavs" :key="group.group_ID" class="mb-6">
-          <h2 class="text-xl font-medium mb-3">{{ group.group_Name || ('หมวด ' + group.group_ID) }}</h2>
+          <h2 class="text-lg md:text-xl font-medium mb-3">{{ group.group_Name || ('หมวด ' + group.group_ID) }}</h2>
 
           <div class="space-y-2">
             <div
