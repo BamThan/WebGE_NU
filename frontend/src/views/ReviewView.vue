@@ -1,8 +1,11 @@
 <script setup>
 import Layout from '@/layout/Layout.vue';
-
 import { ref, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
+// Base API URL (ตั้งใน .env: VITE_API_URL)
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const router = useRouter()
 
 // ข้อมูลที่โหลดจาก backend
 const faculties = ref([])
@@ -19,7 +22,8 @@ const present = ref([])
 const experience = ref([])
 const challenge = ref([])
 const time = ref([])
-// ตัวแปรที่ผูกกับ v-model
+
+// ตัวแปร v-model
 const studentId = ref('')
 const selectedStudentLevel = ref('null')
 const selectedFaculty = ref('null')
@@ -38,16 +42,31 @@ const selectedchallenge = ref('')
 const selectedtime = ref('')
 
 const reviewText = ref('')
+const selectedGroupType = ref('')
 
+// UI state
+const loading = ref(false)
+const submitLoading = ref(false)
+const errorMsg = ref('')
+const successMsg = ref('')
+
+// ป้องกัน input รับเฉพาะตัวเลข (ถ้าใช้)
 function isNumberOnly(event) {
     if (!/[0-9]/.test(event.key)) {
         event.preventDefault()
     }
 }
 
-const selectedGroupType = ref('')
+// helper headers (ใส่ Authorization ถ้ามี token)
+function authHeaders(contentType = 'application/json') {
+  const headers = {}
+  if (contentType) headers['Content-Type'] = contentType
+  const token = localStorage.getItem('token')
+  if (token) headers.Authorization = `Bearer ${token}`
+  return headers
+}
 
-
+// เมื่อเลือกกลุ่ม ให้โหลดรายวิชาของกลุ่มนั้น (endpoint: /subjects/:groupId)
 watch(selectedGroupType, async (newGroupId) => {
     if (!newGroupId) {
         subjects.value = []
@@ -55,136 +74,136 @@ watch(selectedGroupType, async (newGroupId) => {
     }
 
     try {
-        const res = await fetch(`http://localhost:3000/subjects/${newGroupId}`)
-        subjects.value = await res.json()
+        const res = await fetch(`${API_URL}/subjects/${encodeURIComponent(newGroupId)}`, {
+          method: 'GET',
+          headers: authHeaders()
+        })
+        const j = await res.json().catch(() => null)
+        if (!res.ok) throw new Error(j?.message || res.statusText || 'โหลดรายวิชาล้มเหลว')
+        subjects.value = Array.isArray(j) ? j : (j?.items ?? [])
     } catch (err) {
         console.error("โหลดรายวิชาไม่สำเร็จ:", err)
         subjects.value = []
     }
 })
 
-
-
-
-// โหลดข้อมูลจาก backend
+// โหลดข้อมูล static ตอน mount (ไม่โหลด subjects จนกว่าจะเลือก group)
 onMounted(async () => {
     try {
-        const [fRes, iRes, gRes, grRes, sgRes, gwRes, swRes, exRes, attRes, inRes, preRes,
-            expRes, cRes, tRes] = await Promise.all([
-                fetch("http://localhost:3000/faculty"),
-                fetch("http://localhost:3000/interestd"),
-                fetch("http://localhost:3000/subject-groups"),
-                fetch("http://localhost:3000/grades"),
-                fetch("http://localhost:3000/subjects/:groupId"),
-                fetch("http://localhost:3000/groupwork"),
-                fetch("http://localhost:3000/solowork"),
-                fetch("http://localhost:3000/exam"),
-                fetch("http://localhost:3000/attendance"),
-                fetch("http://localhost:3000/instruction"),
-                fetch("http://localhost:3000/present"),
-                fetch("http://localhost:3000/experience"),
-                fetch("http://localhost:3000/challenge"),
-                fetch("http://localhost:3000/time")
-            ])
+        loading.value = true
+        errorMsg.value = ''
 
+        // ขอข้อมูลหลาย endpoint พร้อมกัน
+        const endpoints = [
+          'faculty','interestd','subject-groups','grades',
+          'groupwork','solowork','exam','attendance',
+          'instruction','present','experience','challenge','time'
+        ]
 
-        faculties.value = await fRes.json()
-        interestds.value = await iRes.json()
-        subjectGroups.value = await gRes.json()
-        grades.value = await grRes.json()
-        subjects.value = await sgRes.json()
-        groupwork.value = await gwRes.json()
-        soloWork.value = await swRes.json()
-        exam.value = await exRes.json()
-        attendance.value = await attRes.json()
-        instruction.value = await inRes.json()
-        present.value = await preRes.json()
-        experience.value = await expRes.json()
-        challenge.value = await cRes.json()
-        time.value = await tRes.json()
+        const fetches = endpoints.map(p => fetch(`${API_URL}/${p}`, { headers: authHeaders() }))
+        const responses = await Promise.all(fetches)
 
-        const email = localStorage.getItem('userEmail')
-        if (!email) {
-            return router.push({ name: 'login', query: { redirect: '/review' } })
+        // parse results safely
+        const parseSafe = async (r) => {
+          const j = await r.json().catch(() => null)
+          if (!r.ok) throw new Error(j?.message || r.statusText || 'Request failed')
+          return j ?? []
         }
 
+        faculties.value = await parseSafe(responses[0])
+        interestds.value = await parseSafe(responses[1])
+        subjectGroups.value = await parseSafe(responses[2])
+        grades.value = await parseSafe(responses[3])
+        groupwork.value = await parseSafe(responses[4])
+        soloWork.value = await parseSafe(responses[5])
+        exam.value = await parseSafe(responses[6])
+        attendance.value = await parseSafe(responses[7])
+        instruction.value = await parseSafe(responses[8])
+        present.value = await parseSafe(responses[9])
+        experience.value = await parseSafe(responses[10])
+        challenge.value = await parseSafe(responses[11])
+        time.value = await parseSafe(responses[12])
+
+        // ค่า default จาก localStorage (ถ้ามี)
         studentId.value = localStorage.getItem('student_ID') || ''
         selectedStudentLevel.value = localStorage.getItem('studentLevel') || ''
         selectedFaculty.value = localStorage.getItem('facultyId') || ''
-
     } catch (err) {
         console.error("โหลดข้อมูลไม่สำเร็จ:", err)
+        errorMsg.value = err?.message || 'โหลดข้อมูลเริ่มต้นล้มเหลว'
+    } finally {
+        loading.value = false
     }
 })
 
-
-// ====== ส่งฟอร์มเข้า /submit-form ======
-async function onSubmit(e) {
-    e.preventDefault()
-
-    // ตรวจง่าย ๆ
+// Submit form (ใช้ @submit.prevent)
+async function onSubmit() {
+    // ตรวจ validate เบื้องต้น
     if (!studentId.value) return alert('กรุณากรอกรหัสนิสิต')
-    if (!selectedStudentLevel.value) return alert('กรุณาเลือกชั้นปี')
-    if (!selectedFaculty.value) return alert('กรุณาเลือกคณะ')
+    if (!selectedStudentLevel.value || selectedStudentLevel.value === 'null') return alert('กรุณาเลือกชั้นปี')
+    if (!selectedFaculty.value || selectedFaculty.value === 'null') return alert('กรุณาเลือกคณะ')
     if (!selectedGroupType.value) return alert('กรุณาเลือกหมวดวิชา')
     if (!selectedSubject.value) return alert('กรุณาเลือกรายวิชา')
     if (!selectedGroupwork.value) return alert('กรุณาตอบคำถามข้อที่ 1')
     if (!selectedsolowork.value) return alert('กรุณาตอบคำถามข้อที่ 2')
     if (!selectedexam.value) return alert('กรุณาตอบคำถามข้อที่ 3')
     if (!selectedattendance.value) return alert('กรุณาตอบคำถามข้อที่ 4')
-    if (selectedinstruction.value.length === 0) return alert('กรุณาตอบคำถามข้อที่ 5')
+    if (!Array.isArray(selectedinstruction.value) || selectedinstruction.value.length === 0) return alert('กรุณาตอบคำถามข้อที่ 5')
     if (!selectedpresent.value) return alert('กรุณาตอบคำถามข้อที่ 6')
     if (!selectedexperience.value) return alert('กรุณาตอบคำถามข้อที่ 7')
     if (!selectedchallenge.value) return alert('กรุณาตอบคำถามข้อที่ 8')
     if (!selectedtime.value) return alert('กรุณาตอบคำถามข้อที่ 9')
 
-    // เตรียม payload ให้ตรงกับ backend
     const payload = {
         student_id: studentId.value,
         subjectGroup: selectedGroupType.value,
         student_level: selectedStudentLevel.value,
         faculty: selectedFaculty.value,
-        interestd: selectedInterestd.value,   // backend รวมเป็น comma ให้เอง
+        interestd: Array.isArray(selectedInterestd.value) ? selectedInterestd.value.join(',') : selectedInterestd.value,
         subject: selectedSubject.value,
-
         groupwork: selectedGroupwork.value,
         solowork: selectedsolowork.value,
         exam: selectedexam.value,
         attendance: selectedattendance.value,
-        instruction: selectedinstruction.value.join(','),
+        instruction: Array.isArray(selectedinstruction.value) ? selectedinstruction.value.join(',') : selectedinstruction.value,
         present: selectedpresent.value,
         experience: selectedexperience.value,
         challenge: selectedchallenge.value,
         time: selectedtime.value,
-
         grade: selectedGrade.value,
         review: reviewText.value
-        
     }
 
     try {
-        const res = await fetch('http://localhost:3000/submit-form', {
+        submitLoading.value = true
+        errorMsg.value = ''
+        successMsg.value = ''
+
+        const res = await fetch(`${API_URL}/submit-form`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders(),
             body: JSON.stringify(payload)
         })
 
-        const text = await res.text()
+        const j = await res.json().catch(() => null)
         if (!res.ok) {
-            console.error('submit-form failed:', text)
-            return alert('บันทึกไม่สำเร็จ: ' + text)
+            console.error('submit-form failed:', j || await res.text())
+            throw new Error(j?.message || res.statusText || 'บันทึกไม่สำเร็จ')
         }
 
-        alert('บันทึกสำเร็จ 🎉')
-        // จะ reset ฟอร์มไหม? ถ้าต้องการ uncomment ข้างล่าง
+        successMsg.value = j?.message || 'บันทึกสำเร็จ 🎉'
+        alert(successMsg.value)
+        // ถ้าต้องการ reset form ให้เรียก resetForm()
         // resetForm()
     } catch (err) {
         console.error('submit error:', err)
-        alert('เกิดข้อผิดพลาดระหว่างบันทึก')
+        errorMsg.value = err?.message || 'เกิดข้อผิดพลาดระหว่างบันทึก'
+        alert(errorMsg.value)
+    } finally {
+        submitLoading.value = false
     }
 }
 
-//(ถ้าต้องการ reset)
 function resetForm() {
     studentId.value = ''
     selectedStudentLevel.value = ''
@@ -204,10 +223,7 @@ function resetForm() {
     selectedGrade.value = ''
     reviewText.value = ''
 }
-
-
 </script>
-
 <template>
     <Layout>
         <form class="md:p-6 space-y-6" @submit="onSubmit">
